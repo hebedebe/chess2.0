@@ -2,7 +2,7 @@
 New chess update!!
 
 CHESS RULES!!!!
-1. rolling a d4 determines the number of moves
+1. rolling a d4 determines the number of moves <br>
     a. if a player rolls a 1 three times in a row (on a d4) , on their next turn they are allowed to roll a d12
     b. if a player puts the opposing king into check then they forfeit the rest of their moves for that turn
     c. if a 4 is rolled on the first move, it must be rerolled
