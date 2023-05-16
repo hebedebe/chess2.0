@@ -26,3 +26,9 @@ New chess update!!
             &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;bba. this behaviour is stopped if either player gets their king back.
 <br><br>
 5. A bishop may not take another bishop that was on the same diagonal as it when the turn started.
+<br><br>
+6. Each player has a BLOOD counter, that, should it reach 0, causes that player to lose the game.
+    &nbsp;&nbsp;&nbsp;&nbsp;a. Taking an opponent's piece increases your BLOOD counter proportionally with the piece that was taken
+    &nbsp;&nbsp;&nbsp;&nbsp;b. Taking your own pieces (except the king) can be done in exchange for 2.5x the BLOOD that the piece is worth.
+    &nbsp;&nbsp;&nbsp;&nbsp;c. If a player rolls a 3 twice in a row, they lose a quarter of their BLOOD
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ca. This only occurs if the player have reached or surpassed 75% blood at any point during the game.
