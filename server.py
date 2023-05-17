@@ -43,10 +43,10 @@ def connection(conn, addr):
     conn.send(pickle.dumps({"type":dTypes.GAMEID, "gameid":gameid}))
     try:
         while __name__ == "__main__":
-            data = pickle.loads(conn.recv(1024))
+            data = conn.recv(4096)
+            data = pickle.loads(data)
             datatype = data["type"]
             if (datatype == dTypes.JOINLOBBY):
-                lobby.pop(gameid)
                 lobby.update({gameid:["anonymous",conn]})
                 lobby_.update({gameid:data["username"]})
             elif (datatype == dTypes.REQUESTLOBBY):
