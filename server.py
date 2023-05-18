@@ -43,11 +43,13 @@ class Pieces(Enum):
 	ROOK = 5
 	PAWN = 6
 
+stock_multiplier = 0.1
+
 stock_variations = {
-	Pieces.KING:[-0.1,0.3],
+	Pieces.KING:[-0.1,0.1],
 	Pieces.QUEEN:[-0.4,0.4],
 	Pieces.BISHOP:[-0.05,0.05],
-	Pieces.KNIGHT:[-0.04,0.05],
+	Pieces.KNIGHT:[-0.05,0.05],
 	Pieces.ROOK:[-0.1,0.1],
 	Pieces.PAWN:[-0.01,0.01]
 }
@@ -77,7 +79,9 @@ def connection(conn, addr):
 	conn.send(fixData(pickle.dumps({"type":dTypes.GAMEID, "gameid":gameid})))
 	try:
 		while __name__ == "__main__":
-			data = recvData(conn.recv(4096))
+			data = conn.recv(4096)
+			if data != b'':
+				data = recvData(data)
 			data = pickle.loads(data)
 			datatype = data["type"]
 			if (datatype == dTypes.JOINLOBBY):
@@ -124,7 +128,9 @@ def connection(conn, addr):
 					value = stocks[i][0]
 					momentum = stocks[i][2]
 					momentum += randfloat(stock_variations[i][0],stock_variations[i][1])
-					value = clamp(value+momentum,minstockval,100)
+					value = clamp(value+momentum*stock_multiplier,minstockval,100)
+					stocks[i][0] = value
+					stocks[i][2] = momentum
 				conn.send(fixData(pickle.dumps({"type":dTypes.STOCKUPDATE, "stocks":stocks})))
 				opponent.send(fixData(pickle.dumps({"type":dTypes.STOCKUPDATE, "stocks":stocks})))
 	except Exception as e:
