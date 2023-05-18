@@ -33,7 +33,10 @@ def fixData(data, length=4096):
 	return addon+data
 
 def recvData(data):
-	return data[int(data[0:4]):]
+	try:
+		return data[int(data[0:4]):]
+	except:
+		return b''
 
 class Pieces(Enum):
 	KING = 1
@@ -79,9 +82,9 @@ def connection(conn, addr):
 	conn.send(fixData(pickle.dumps({"type":dTypes.GAMEID, "gameid":gameid})))
 	try:
 		while __name__ == "__main__":
-			data = conn.recv(4096)
-			if data != b'':
-				data = recvData(data)
+			data = recvData(conn.recv(4096))
+			if data == b'':
+				continue
 			data = pickle.loads(data)
 			datatype = data["type"]
 			if (datatype == dTypes.JOINLOBBY):
