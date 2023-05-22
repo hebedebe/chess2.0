@@ -6,7 +6,7 @@ from copy import deepcopy
 import random
 
 HOST = "0.0.0.0"  # Standard loopback interface address (localhost)
-PORT = 17  # Port to listen on (non-privileged ports are > 1023)
+PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
 
 lobby = {}
 lobby_ = {} #usernames only
@@ -35,7 +35,8 @@ def fixData(data, length=4096):
 def recvData(data):
 	try:
 		return data[int(data[0:4]):]
-	except:
+	except Exception as e:
+		print(e)
 		return b''
 
 class Pieces(Enum):
