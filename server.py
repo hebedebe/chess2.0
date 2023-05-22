@@ -29,14 +29,13 @@ def fixData(data, length=4096):
 	addonlen_ = str(addonlen)
 	while len(addonlen_) < 4:
 		addonlen_ = "0"+addonlen_
-	addon = addonlen_.encode()+(b" "*(addonlen-4))
+	addon = (b" "*(addonlen))
 	return addon+data
 
 def recvData(data):
 	try:
-		return data[int(data[0:4]):]
-	except Exception as e:
-		print(e)
+		return data.strip()#data[int(data[0:4]):]
+	except:
 		return b''
 
 class Pieces(Enum):
