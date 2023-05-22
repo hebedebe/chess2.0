@@ -6,7 +6,7 @@ from copy import deepcopy
 import random
 
 HOST = "0.0.0.0"  # Standard loopback interface address (localhost)
-PORT = 65432  # Port to listen on (non-privileged ports are > 1023)
+PORT = 17  # Port to listen on (non-privileged ports are > 1023)
 
 lobby = {}
 lobby_ = {} #usernames only
@@ -15,7 +15,7 @@ games = {}
 
 gameid_ = 0
 
-minstockval = 0.007
+minstockval = 1#0.007
 
 def clamp(val, min, max):
 	if (val > max):
