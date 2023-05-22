@@ -77,8 +77,17 @@ def connection(conn, addr):
 	print(f"Connected by {addr}")
 	print(conn)
 	opponent = None
+	got_lock = False
+	lock = b'DKpDCBSnVekQ8sWm'
+	lock_inpt = b''
 	gameid = deepcopy(gameid_)
 	gameid_ += 1
+	while not got_lock:
+		data = conn.recv(16)
+		lock_inpt = lock_inpt + data
+		if lock in lock_inpt:
+			print(f"Got lock from {addr}")
+			got_lock = True
 	lobby.update({gameid:["anonymous",conn]})
 	conn.send(fixData(pickle.dumps({"type":dTypes.GAMEID, "gameid":gameid})))
 	try:
