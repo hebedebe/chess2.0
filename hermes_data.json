@@ -1,1 +1,1 @@
-{"servers": ["http://10.185.154.17:80","http://188.191.106.61:80"], "latestversion":0.1, "patchnotes":" - Centralised server list to github\n - Centralised patch notes to github\n - Added coloured text\n - Added backup servers\n - Threaded input and message recieving"}
+{"servers": ["http://10.185.154.17:80","http://188.191.106.61:80"], "stable":False, "urgent":False, "latestversion":0.1, "patchnotes":" - Centralised server list to github\n - Centralised patch notes to github\n - Added coloured text\n - Added backup servers\n - Threaded input and message recieving"}
