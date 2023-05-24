@@ -2,8 +2,13 @@
 
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import json
+from copy import deepcopy
 
-messages = ["","","","","","","","","","","","","","","","","","","",""]
+default_messages = ["00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"]
+
+messages = {
+    "main":deepcopy(default_messages)
+}
 
 class S(BaseHTTPRequestHandler):
     def _set_headers(self):
@@ -14,21 +19,35 @@ class S(BaseHTTPRequestHandler):
     def do_GET(self):
         global messages
         self._set_headers()
-        if self.path == "/getmsg":
-            #print(json.dumps({"messages":messages}))
-            self.wfile.write(json.dumps({"messages":messages[:26]}).encode(encoding="UTF-8"))
+        if self.path == "/":
+            return
+        channel = self.path[1:]
+        try:
+            msg_ = messages[channel]
+        except:
+            print(f"Created channel {channel}")
+            messages[channel] = deepcopy(default_messages)
+            msg_ = messages[channel]
+        self.wfile.write(json.dumps({"messages":messages[channel][:25]}).encode(encoding="UTF-8"))
 
     def do_HEAD(self):
         self._set_headers()
 
     def do_POST(self):
         global messages
-        if self.path == "/postmsg":
-            content_length = int(self.headers['Content-Length'])
-            post_data = self.rfile.read(content_length)[:].decode(encoding="UTF-8")
-            messages.insert(0,post_data)
-            self._set_headers()
-            print(post_data)
+        if self.path == "/":
+            return
+        channel = self.path[1:]
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length).decode(encoding="UTF-8")
+        try:
+            msg_ = messages[channel]
+        except:
+            print(f"Created channel {channel}")
+            messages[channel] = deepcopy(default_messages)
+            msg_ = messages[channel]
+        messages[channel].insert(0,post_data)
+        self._set_headers()
 
 def run(server_class=HTTPServer, handler_class=S, port=80):
     server_address = ('', port)
