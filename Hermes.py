@@ -35,7 +35,7 @@ import sys
 
 colorama.init()
 
-version = 0.3
+version = 0.4
 
 print(f"Hermes version {version}")
 
@@ -131,11 +131,8 @@ except:
 print("""
 
 Patch Notes
- - Added admin command framework
- - Admins can now ban people by their key
- - Banned users cannot send messages or commands
- - Fixed download message when updating
- - Fixed outdated latestver variable
+ - Fixed bug that causes the program to crash on mac
+ - Fixed bug that stops mac users from deleting text (hopefully)
 
 """)
 
@@ -192,15 +189,20 @@ def inputhandler():
     global inpt, stdscr
     while __name__ == "__main__":
         try:
-            keypressed = chr(stdscr.getch())
+            chcode = stdscr.getch()
+            keypressed = chr(chcode)
+            print(chcode)
             if keypressed == "\n":
                 send_msg(inpt)
                 stdscr.addstr(curses.LINES-3, 0, " "*curses.COLS)
                 inpt = ""
-            elif keypressed == "\b":
+            elif keypressed == "\b" or chcode == 127:
                 inpt = inpt[:len(inpt)-1]
             else:
-                inpt = inpt+keypressed
+                if chcode == 34:
+                    inpt = inpt+'"'
+                else:
+                    inpt = inpt+keypressed
         except:
             pass
 
@@ -246,7 +248,7 @@ while __name__ == "__main__":
     stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
     stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
 
-    for i in range(len(messages)):
+    for i in range(len(messages))[:curses.LINES-5]:
         if len(messages[i]) > curses.COLS-2:
             messages[i] = messages[i][:curses.COLS-2]
         stdscr.addstr(curses.LINES-5-i, 0, messages[i][2:]+" "*(curses.COLS-len(messages[i])-1), curses.color_pair(int(messages[i][:2])))
