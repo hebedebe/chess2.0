@@ -1,19 +1,76 @@
-import requests
+print("Importing libraries...")
+
+import os
+
+try:
+    import requests
+except:
+    print("Installing requests module")
+    os.system("pip3 install requests")
+    import requests
 import time
 import pickle
-import curses
+try:
+    import curses
+except:
+    print("Installing windows-curses")
+    os.system("pip3 install windows-curses")
+    import curses
+try:
+    import colorama
+except:
+    print("Installing colorama")
+    os.system("pip3 install colorama")
+    import colorama
 import threading
+try:
+    import urllib.request
+except:
+    print("Installing urllib")
+    os.system("pip3 install urllib")
+    import urllib.request
 import random
 import atexit
 import sys
 
-servers = requests.get("https://hebedebe.github.io/chess2.0/hermes_data.json").json()["servers"]
+colorama.init()
+
+version = 0.3
+
+print(f"Hermes version {version}")
+
+print("Retrieving JSON data...")
+
+data = requests.get("https://hebedebe.github.io/chess2.0/hermes_data.json").json()
+
+servers = data["servers"]
 
 print(f"Server list recieved")
 
-patchnotes = requests.get("https://hebedebe.github.io/chess2.0/hermes_data.json").json()["patchnotes"]
+patchnotes = data["patchnotes"]
 
-print(f"Downloaded patch notes")
+print(f"Downloaded notifications")
+
+latestver = data["latestversion"]
+latestverstable = data["stable"]
+latestverurgent = data["urgent"]
+
+print(f"Got latest version ({latestver})")
+
+if (latestver > version):
+    if latestverurgent:
+        doinstall = True
+    else:
+        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n]")
+        if not latestverstable:
+            print(f"{colorama.Back.RED}WARNING: Version {latestver} of Hermes is unstable.{colorama.Back.RESET}")
+        doinstall = ("y" in input("> "))
+    if doinstall:
+        print(f"Downloading Hermes V{latestver}... (this may take a while)")
+        urllib.request.urlretrieve("https://hebedebe.github.io/chess2.0/Hermes.exe", "Hermes.exe")
+        print("Close and reopen the program to complete the installation.")
+        while True:
+            pass
 
 #servers = ["http://10.185.154.17:80","http://188.191.106.61:80"]
 
@@ -42,24 +99,87 @@ for i in servers:
         print(e)
 
 if not connected:
-    print("\nThe main server is probably offline. Try again later\n")
+    print("\nCould not connect to any servers. Please try again later\n")
     while True:
         pass
 
-print(f"\nPatch Notes\n{patchnotes}\n")
+print(f"\nNotifications\n{patchnotes}\n")
+
+keylen = 32
+
+try:
+    if os.path.isfile("key.txt"):
+        f = open("key.txt", "r")
+        key = f.read()
+        f.close()
+    else:
+        f = open("key.txt", "x")
+        f.close()
+        f = open("key.txt", "w")
+        key = ""
+        for i in range(keylen):
+            chnum = random.randint(33,126)
+            while chnum == 34 or chnum == 96:
+                chnum = random.randint(33,126)
+            key = key+chr(chnum)
+        f.write(key)
+        f.close()
+except:
+    print("Key generation/detection failed.")
+    key = None
+
+print("""
+
+Patch Notes
+ - Added admin command framework
+ - Admins can now ban people by their key
+ - Banned users cannot send messages or commands
+ - Fixed download message when updating
+ - Fixed outdated latestver variable
+
+""")
+
+print(f"Key: {key}\n")
 
 username = input("Username\n> ")
+
+channel = "main"
+
+if len(username) > 16:
+    username = username[:16]
 
 messages = []
 
 def get_msg():
     global domain, messages
-    response = requests.get(domain+"/getmsg")
+    response = requests.get(domain+f"/{channel}")
     data = response.json()
     messages = data["messages"]
 
 def send_msg(msg):
-    response = requests.post(domain+"/postmsg", data=(f"{colour}[{username}] {msg}".encode(encoding="UTF-8")))
+    global channel, messages, colour, inpt
+    if msg.split()[0] == "|CMD|":
+        response = requests.post(domain+f"/{channel}", data=(f"{key}{colour}{msg}".encode(encoding="UTF-8")))
+        inpt = ""
+        stdscr.addstr(curses.LINES-3, 0, " "*curses.COLS)
+    elif msg[0] != "!":
+        response = requests.post(domain+f"/{channel}", data=(f"{key}{colour}[{username}] {msg}".encode(encoding="UTF-8")))
+    else:
+        if msg[0:4] == "!key":
+            stdscr.addstr(curses.LINES-1, 0, 'Key: "'+key+'"')
+        elif msg[0:8] == "!channel":
+            requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} left the channel.)".encode(encoding="UTF-8")))
+            channel = msg[8:].strip()
+            requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} entered the channel.)".encode(encoding="UTF-8")))
+            stdscr.addstr(curses.LINES-1, 0, f"Switched to channel {channel}                             ")
+            messages = ["00Loading channel...","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"]
+        elif msg[0:7] == "!colour":
+            colour = msg[8:]
+            if len(colour) < len("10"):
+                colour = "0"+colour
+            stdscr.addstr(curses.LINES-1, 0, f"Changed colour to index <#{colour}>                             ")
+        elif msg[0:3] == "!dm":
+            pass #send a dm
 
 def msghandler():
     while __name__ == "__main__":
@@ -84,11 +204,11 @@ def inputhandler():
         except:
             pass
 
-requests.post(domain+"/postmsg", data=(f"00           ({username} joined.)".encode(encoding="UTF-8")))
+requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} joined.)".encode(encoding="UTF-8")))
 get_msg()
 
 def exit_handler():
-    requests.post(domain+"/postmsg", data=(f"00           ({username} left.)".encode(encoding="UTF-8")))
+    requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} left.)".encode(encoding="UTF-8")))
 
 atexit.register(exit_handler)
 
@@ -106,23 +226,29 @@ curses.curs_set(False)
 if curses.has_colors():
     curses.start_color()
     curses.use_default_colors()
-    for i in range(0, curses.COLOR_PAIRS-1):
-        curses.init_pair(i + 1, i, -1)
+    try:
+        for i in range(0, curses.COLOR_PAIRS-1):
+            curses.init_pair(i + 1, i, -1)
+    except:
+        for i in range(0, curses.COLORS-1):
+            curses.init_pair(i + 1, i, -1)
     if ("debug" in sys.argv):
         try:
             for i in range(0, 255):
                 stdscr.addstr(str(i), curses.color_pair(i))
         except curses.ERR:
-            # End of screen reached
             pass
         stdscr.refresh()
         time.sleep(5)
 
 while __name__ == "__main__":
+    stdscr.addstr(0, 0, f"//{channel}          ")
     stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
     stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
 
     for i in range(len(messages)):
+        if len(messages[i]) > curses.COLS-2:
+            messages[i] = messages[i][:curses.COLS-2]
         stdscr.addstr(curses.LINES-5-i, 0, messages[i][2:]+" "*(curses.COLS-len(messages[i])-1), curses.color_pair(int(messages[i][:2])))
 
     stdscr.refresh()
