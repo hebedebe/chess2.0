@@ -245,16 +245,7 @@ if curses.has_colors():
         stdscr.refresh()
         time.sleep(5)
 
-y, x = stdscr.getmaxyx()
-
 while __name__ == "__main__":
-    if curses.is_term_resized(y, x):
-        y, x = stdscr.getmaxyx()
-        stdscr = curses.initscr()
-        stdscr.clear()
-        curses.resize_term(y, x)
-        stdscr.refresh()
-
     stdscr.addstr(0, 0, f"//{channel}          ")
     stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
     stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
