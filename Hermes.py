@@ -29,13 +29,14 @@ except:
     print("Installing urllib")
     os.system("pip3 install urllib")
     import urllib.request
+from copy import deepcopy
 import random
 import atexit
 import sys
 
 colorama.init()
 
-version = 0.4
+version = 0.5
 
 print(f"Hermes version {version}")
 
@@ -61,7 +62,7 @@ if (latestver > version):
     if latestverurgent:
         doinstall = True
     else:
-        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n]")
+        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n] (WINDOWS ONLY)")
         if not latestverstable:
             print(f"{colorama.Back.RED}WARNING: Version {latestver} of Hermes is unstable.{colorama.Back.RESET}")
         doinstall = ("y" in input("> "))
@@ -71,8 +72,6 @@ if (latestver > version):
         print("Close and reopen the program to complete the installation.")
         while True:
             pass
-
-#servers = ["http://10.185.154.17:80","http://188.191.106.61:80"]
 
 colour = str(random.randint(2,32))
 
@@ -131,8 +130,8 @@ except:
 print("""
 
 Patch Notes
- - Fixed bug that causes the program to crash on mac
- - Fixed bug that stops mac users from deleting text (hopefully)
+ - Fixed bug that causes the program to crash with invalid colour values
+ - Fixed bug that causes colour indexes with more than 2 digits to bug
 
 """)
 
@@ -159,6 +158,7 @@ def send_msg(msg):
         response = requests.post(domain+f"/{channel}", data=(f"{key}{colour}{msg}".encode(encoding="UTF-8")))
         inpt = ""
         stdscr.addstr(curses.LINES-3, 0, " "*curses.COLS)
+        stdscr.addstr(curses.LINES-1, 0, f"Sent admin command                                ")
     elif msg[0] != "!":
         response = requests.post(domain+f"/{channel}", data=(f"{key}{colour}[{username}] {msg}".encode(encoding="UTF-8")))
     else:
@@ -171,9 +171,12 @@ def send_msg(msg):
             stdscr.addstr(curses.LINES-1, 0, f"Switched to channel {channel}                             ")
             messages = ["00Loading channel...","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00","00"]
         elif msg[0:7] == "!colour":
-            colour = msg[8:]
+            colour_ = deepcopy(colour)
+            colour = msg.split()[1]
             if len(colour) < len("10"):
                 colour = "0"+colour
+            if len(colour) < len("1") or len(colour) > len("10"):
+                colour = colour_
             stdscr.addstr(curses.LINES-1, 0, f"Changed colour to index <#{colour}>                             ")
         elif msg[0:3] == "!dm":
             pass #send a dm
@@ -191,7 +194,6 @@ def inputhandler():
         try:
             chcode = stdscr.getch()
             keypressed = chr(chcode)
-            print(chcode)
             if keypressed == "\n":
                 send_msg(inpt)
                 stdscr.addstr(curses.LINES-3, 0, " "*curses.COLS)
@@ -210,7 +212,7 @@ requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} joined
 get_msg()
 
 def exit_handler():
-    requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} left.)".encode(encoding="UTF-8")))
+    requests.post(domain+f"/{channel}", data=(f"{key}00           ({username} disconnected.)".encode(encoding="UTF-8")))
 
 atexit.register(exit_handler)
 
@@ -243,7 +245,16 @@ if curses.has_colors():
         stdscr.refresh()
         time.sleep(5)
 
+y, x = stdscr.getmaxyx()
+
 while __name__ == "__main__":
+    if curses.is_term_resized(y, x):
+        y, x = stdscr.getmaxyx()
+        stdscr = curses.initscr()
+        stdscr.clear()
+        curses.resize_term(y, x)
+        stdscr.refresh()
+
     stdscr.addstr(0, 0, f"//{channel}          ")
     stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
     stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
