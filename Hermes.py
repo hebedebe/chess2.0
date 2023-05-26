@@ -68,6 +68,9 @@ import atexit
 addsplash("Importing urllib")
 import urllib
 
+if platform == "darwin":
+    logo = ""
+
 class Page(Enum):
     LOADING = auto()
     UPDATEPROMPT = auto()
