@@ -1,4 +1,4 @@
-print("Importing libraries...")
+print("Importing libraries...\n")
 
 import os
 
@@ -33,12 +33,16 @@ from copy import deepcopy
 import random
 import atexit
 import sys
+from sys import platform
+import urllib
 
 colorama.init()
 
-version = 0.5
+version = 0.6
 
-print(f"Hermes version {version}")
+print(f"\nHermes version {version}")
+
+print(f"Running on {platform}")
 
 print("Retrieving JSON data...")
 
@@ -62,16 +66,37 @@ if (latestver > version):
     if latestverurgent:
         doinstall = True
     else:
-        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n] (WINDOWS ONLY)")
+        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n]")
         if not latestverstable:
             print(f"{colorama.Back.RED}WARNING: Version {latestver} of Hermes is unstable.{colorama.Back.RESET}")
         doinstall = ("y" in input("> "))
     if doinstall:
         print(f"Downloading Hermes V{latestver}... (this may take a while)")
-        urllib.request.urlretrieve("https://hebedebe.github.io/chess2.0/Hermes.exe", "Hermes.exe")
-        print("Close and reopen the program to complete the installation.")
-        while True:
-            pass
+        path = os.path.dirname(__file__)
+        ftype_ = "Hermes.exe"
+        if platform == "darwin" or platform == "linux" or platform == "linux2":
+            ftype_ = "Hermes.py"
+        with urllib.request.urlopen(f"https://hebedebe.github.io/chess2.0/{ftype_}") as upd:
+            with open(path+"/"+ftype_, "wb+") as f:
+                print(f"Writing program to {path+'/'+ftype_}")
+                f.write(upd.read())
+        #urllib.request.urlretrieve("https://hebedebe.github.io/chess2.0/Hermes.exe", "Hermes.exe")
+        print("The program will now restart to complete installation.")
+        time.sleep(1)
+        try:
+            if platform == "win32":
+                os.system("cls")
+                os.system(path+'\\'+ftype_)
+            else:
+                os.system("clear")
+                try:
+                    os.system(f"python {path+'/'+ftype_}")
+                except:
+                    os.system(f"python3 {path+'/'+ftype_}")
+        except:
+            print("Program failed to execute. Please restart the program manually")
+            time.sleep(3)
+        exit()
 
 colour = str(random.randint(2,32))
 
@@ -118,7 +143,7 @@ try:
         key = ""
         for i in range(keylen):
             chnum = random.randint(33,126)
-            while chnum == 34 or chnum == 96:
+            while chnum == 34 or chnum == 96 or ch(chnum) == "\\":
                 chnum = random.randint(33,126)
             key = key+chr(chnum)
         f.write(key)
@@ -130,8 +155,11 @@ except:
 print("""
 
 Patch Notes
- - Fixed bug that causes the program to crash with invalid colour values
- - Fixed bug that causes colour indexes with more than 2 digits to bug
+ - Fixed updater crashing instead of updating
+ - Increased update download speed
+ - Fixed the !colour command not working
+ - Added "debug" launch condition to list all available colours
+ - Servers will now add their IP and port to the online list when they start
 
 """)
 
@@ -250,9 +278,12 @@ while __name__ == "__main__":
     stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
     stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
 
-    for i in range(len(messages))[:curses.LINES-5]:
-        if len(messages[i]) > curses.COLS-2:
-            messages[i] = messages[i][:curses.COLS-2]
-        stdscr.addstr(curses.LINES-5-i, 0, messages[i][2:]+" "*(curses.COLS-len(messages[i])-1), curses.color_pair(int(messages[i][:2])))
+    try:
+        for i in range(len(messages))[:curses.LINES-5]:
+            if len(messages[i]) > curses.COLS-2:
+                messages[i] = messages[i][:curses.COLS-2]
+            stdscr.addstr(curses.LINES-5-i, 0, messages[i][2:]+" "*(curses.COLS-len(messages[i])-1), curses.color_pair(int(messages[i][:2])))
+    except:
+        pass
 
     stdscr.refresh()
