@@ -38,7 +38,7 @@ import urllib
 
 colorama.init()
 
-version = 0.6
+version = 0.7
 
 print(f"\nHermes version {version}")
 
@@ -155,11 +155,7 @@ except:
 print("""
 
 Patch Notes
- - Fixed updater crashing instead of updating
- - Increased update download speed
- - Fixed the !colour command not working
- - Added "debug" launch condition to list all available colours
- - Servers will now add their IP and port to the online list when they start
+ - Fixed pressing the windows button crashing the program
 
 """)
 
@@ -274,16 +270,17 @@ if curses.has_colors():
         time.sleep(5)
 
 while __name__ == "__main__":
-    stdscr.addstr(0, 0, f"//{channel}          ")
-    stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
-    stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
-
     try:
+        stdscr.addstr(0, 0, f"//{channel}          ")
+        stdscr.addstr(curses.LINES-4, 0, "-"*curses.COLS)
+        stdscr.addstr(curses.LINES-3, 0, "> "+inpt+" "*(curses.COLS-len("> "+inpt)-1))
+
         for i in range(len(messages))[:curses.LINES-5]:
             if len(messages[i]) > curses.COLS-2:
                 messages[i] = messages[i][:curses.COLS-2]
             stdscr.addstr(curses.LINES-5-i, 0, messages[i][2:]+" "*(curses.COLS-len(messages[i])-1), curses.color_pair(int(messages[i][:2])))
     except:
-        pass
+        if b'\x00' in inpt.encode("utf-8"):
+            inpt = inpt[:len(inpt)-1]
 
     stdscr.refresh()
