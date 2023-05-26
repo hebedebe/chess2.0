@@ -1,76 +1,217 @@
-print("Importing libraries...\n")
-
-import os
-
-try:
-    import requests
-except:
-    print("Installing requests module")
-    os.system("pip3 install requests")
-    import requests
-import time
-import pickle
-try:
-    import curses
-except:
-    print("Installing windows-curses")
-    os.system("pip3 install windows-curses")
-    import curses
-try:
-    import colorama
-except:
-    print("Installing colorama")
-    os.system("pip3 install colorama")
-    import colorama
-import threading
-try:
-    import urllib.request
-except:
-    print("Installing urllib")
-    os.system("pip3 install urllib")
-    import urllib.request
-from copy import deepcopy
-import random
-import atexit
-import sys
-from sys import platform
-import urllib
-
-colorama.init()
+splashtext = ["Importing libraries..."]
 
 version = 0.7
 
-print(f"\nHermes version {version}")
+logo = [
+    "",
+    ",--.  ,--.",
+    "|  '--'  | ,---. ,--.--.,--,--,--. ,---.  ,---.",
+    "|  .--.  || .-. :|  .--'|        || .-. :(  .-'",
+    "|  |  |  |\   --.|  |   |  |  |  |\   --..-'  `)",
+    "`--'  `--' `----'`--'   `--`--`--' `----'`----'",
+    ""
+    ]
 
-print(f"Running on {platform}")
+patchnotes = """
 
-print("Retrieving JSON data...")
+Patch Notes
+ - Fixed pressing the windows button crashing the program
+
+"""
+
+def addsplash(text):
+    global splashtext
+    splashtext.insert(0,"     "+text+"     ")
+
+import os
+import threading
+from enum import Enum, auto
+from sys import platform
+import sys
+try:
+    import curses
+except:
+    addsplash("Installing windows-curses")
+    os.system("pip3 install windows-curses")
+    import curses
+addsplash("Importing requests")
+try:
+    import requests
+except:
+    addsplash("Installing requests module")
+    os.system("pip3 install requests")
+    import requests
+addsplash("Importing time")
+import time
+addsplash("Importing pickle")
+import pickle
+addsplash("Importing colorama")
+try:
+    import colorama
+except:
+    addsplash("Installing colorama")
+    os.system("pip3 install colorama")
+    import colorama
+addsplash("Importing urllib.request")
+try:
+    import urllib.request
+except:
+    addsplash("Installing urllib")
+    os.system("pip3 install urllib")
+    import urllib.request
+addsplash("Importing deepcopy from copy")
+from copy import deepcopy
+addsplash("Importing random")
+import random
+addsplash("Importing atexit")
+import atexit
+addsplash("Importing urllib")
+import urllib
+
+class Page(Enum):
+    LOADING = auto()
+    UPDATEPROMPT = auto()
+    UPDATE = auto()
+    MENU = auto()
+    CHAT = auto()
+
+page = Page.LOADING
+
+addsplash("Initialising curses terminal")
+
+stdscr = curses.initscr()
+
+addsplash("Disabling curses echo")
+
+curses.noecho()
+
+addsplash("Initialising curses terminal")
+
+curses.cbreak()
+
+addsplash("Hiding terminal cursor")
+
+curses.curs_set(False)
+
+#addsplash("Enabling keypad support")
+
+#curses.keypad(stdscr, true);
+
+addsplash("Loading curses colour pairs")
+
+if curses.has_colors():
+    curses.start_color()
+    curses.use_default_colors()
+    try:
+        for i in range(0, curses.COLOR_PAIRS-1):
+            curses.init_pair(i + 1, i, -1)
+    except:
+        for i in range(0, curses.COLORS-1):
+            curses.init_pair(i + 1, i, -1)
+    if ("debug" in sys.argv):
+        try:
+            for i in range(0, 255):
+                stdscr.addstr(str(i), curses.color_pair(i))
+        except curses.ERR:
+            pass
+        stdscr.refresh()
+        time.sleep(5)
+
+def startup():
+    global version, splashtext, logo, page, stdscr
+    logo_col = 35
+    logo_line = 5
+    splashoffset = logo_line+8
+    while __name__ == "__main__":
+        if page == Page.LOADING:
+            stdscr.addstr(0, 0, f"Hermes V{str(version)}")
+            stdscr.addstr(1, 0, f"Platform: {platform}")
+
+            _ = 0
+            for i in logo:
+                stdscr.addstr(logo_line+_, logo_col, i, curses.color_pair(7))
+                _+= 1
+
+            offset = 0
+            for i in splashtext:
+                if offset+splashoffset > curses.LINES:
+                    continue
+                i_ = "     "+i+"     "
+                stdscr.addstr(offset+splashoffset, round((curses.COLS/2)-(len(i_)/2)), i_, curses.color_pair(7))
+                offset += 1
+
+            stdscr.refresh()
+
+threading.Thread(target=startup, daemon=True).start()
+
+addsplash("Initialising Colorama")
+colorama.init()
+
+addsplash(f"Hermes version {str(version)}")
+
+addsplash(f"Running on {str(platform)}")
+
+addsplash("Retrieving JSON data...")
 
 data = requests.get("https://hebedebe.github.io/chess2.0/hermes_data.json").json()
 
 servers = data["servers"]
 
-print(f"Server list recieved")
+addsplash(f"Server list recieved")
 
-patchnotes = data["patchnotes"]
+notifications = data["notifications"]
 
-print(f"Downloaded notifications")
+addsplash(f"Downloaded notifications")
 
 latestver = data["latestversion"]
 latestverstable = data["stable"]
 latestverurgent = data["urgent"]
 
-print(f"Got latest version ({latestver})")
+addsplash(f"Got latest version ({latestver})")
+
+selection_ = 0
+
+#stdscr.nodelay(1)
+
+def updateinput():
+    global page, selection_, stdscr
+    while page == Page.UPDATEPROMPT:
+        c = stdscr.getch()
+        if c == ord("d"):
+            selection_ = 1
+        elif c == ord("a"):
+            selection_ = 0
+        if c == ord("\n") or c == ord(" "):
+            if selection_ == 0:
+                page = Page.UPDATE
+            else:
+                page = Page.MENU
+
+def clear():
+    global stdscr
+    for y in range(curses.LINES):
+        for x in range(curses.COLS-1):
+            stdscr.addstr(y, x, " ")
 
 if (latestver > version):
+    page = Page.UPDATEPROMPT
     if latestverurgent:
-        doinstall = True
+        page = Page.UPDATE
     else:
-        print(f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}? [Y/n]")
-        if not latestverstable:
-            print(f"{colorama.Back.RED}WARNING: Version {latestver} of Hermes is unstable.{colorama.Back.RESET}")
-        doinstall = ("y" in input("> "))
-    if doinstall:
+        selected = curses.init_pair(255, curses.COLOR_BLACK, curses.COLOR_WHITE)
+        umsg = f"Your installation of Hermes (V{version}) is outdated. Install V{latestver}?"
+        threading.Thread(target=updateinput, daemon=True).start()
+        clear()
+        while page == Page.UPDATEPROMPT:
+            stdscr.addstr(round(curses.LINES*0.3),round(curses.COLS/2-(len(umsg)/2)), umsg)
+            if selection_ == 0:
+                stdscr.addstr(round(curses.LINES*0.3)+3,round(curses.COLS/2)-4-9, "[INSTALL]", curses.color_pair(255))
+                stdscr.addstr(round(curses.LINES*0.3)+3,round(curses.COLS/2)+4, "[POSTPONE]")
+            elif selection_ == 1:
+                stdscr.addstr(round(curses.LINES*0.3)+3,round(curses.COLS/2)-4-9, "[INSTALL]")
+                stdscr.addstr(round(curses.LINES*0.3)+3,round(curses.COLS/2)+4, "[POSTPONE]", curses.color_pair(255))
+            stdscr.refresh()
+    if page == Page.UPDATE:
         print(f"Downloading Hermes V{latestver}... (this may take a while)")
         path = os.path.dirname(__file__)
         ftype_ = "Hermes.exe"
@@ -109,25 +250,23 @@ connected = False
 
 for i in servers:
     domain = i
-    print(f"Attempting connection to server {domain}... ({servers.index(i)+1} of {len(servers)})")
+    addsplash(f"Attempting connection to server {domain}... ({servers.index(i)+1} of {len(servers)})")
     try:
         r_ = requests.get(domain)
         if r_.status_code != 200:
-            print(f"Recieved error code <{r_.status_code}>")
+            addsplash(f"Recieved error code <{r_.status_code}>")
         elif r_.status_code == 200:
-            print(f"Connected successfully!")
+            addsplash(f"Connected successfully!")
             connected = True
             break
     except Exception as e:
-        print("Connection failed.")
-        print(e)
+        addsplash("Connection failed.")
+        #print(e)
 
 if not connected:
-    print("\nCould not connect to any servers. Please try again later\n")
+    addsplash("Could not connect to any servers. Please try again later")
     while True:
         pass
-
-print(f"\nNotifications\n{patchnotes}\n")
 
 keylen = 32
 
@@ -149,19 +288,46 @@ try:
         f.write(key)
         f.close()
 except:
-    print("Key generation/detection failed.")
+    addsplash("Key generation/detection failed.")
     key = None
 
-print("""
+addsplash(f"Key: {key}\n")
 
-Patch Notes
- - Fixed pressing the windows button crashing the program
+print(f"\nNotifications\n{patchnotes}\n")
 
-""")
+username = ""
 
-print(f"Key: {key}\n")
+def usernameinput():
+    global username, stdscr, page
+    while page == Page.MENU:
+        try:
+            chcode = stdscr.getch()
+            keypressed = chr(chcode)
+            if keypressed == "\n":
+                page = Page.CHAT
+            elif keypressed == "\b" or chcode == 127:
+                username = username[:len(username)-1]
+            else:
+                if chcode == 34:
+                    username = username+'"'
+                else:
+                    username = username+keypressed
+        except:
+            pass
 
-username = input("Username\n> ")
+page = Page.MENU
+
+threading.Thread(target=usernameinput, daemon=True).start()
+
+time.sleep(0.5)
+clear()
+
+while page == Page.MENU:
+    username_ = "     "+username+"_     "
+    stdscr.addstr(round(curses.LINES*0.3),round(curses.COLS/2-(len("Enter Username:")/2)), "Enter Username:")
+    stdscr.addstr(round(curses.LINES*0.3+3),round(curses.COLS/2-(len(username_)/2)), username_)
+    stdscr.refresh()
+
 
 channel = "main"
 
@@ -243,31 +409,7 @@ atexit.register(exit_handler)
 threading.Thread(target=msghandler, daemon=True).start()
 threading.Thread(target=inputhandler, daemon=True).start()
 
-stdscr = curses.initscr()
-
-curses.noecho()
-
-curses.cbreak()
-
-curses.curs_set(False)
-
-if curses.has_colors():
-    curses.start_color()
-    curses.use_default_colors()
-    try:
-        for i in range(0, curses.COLOR_PAIRS-1):
-            curses.init_pair(i + 1, i, -1)
-    except:
-        for i in range(0, curses.COLORS-1):
-            curses.init_pair(i + 1, i, -1)
-    if ("debug" in sys.argv):
-        try:
-            for i in range(0, 255):
-                stdscr.addstr(str(i), curses.color_pair(i))
-        except curses.ERR:
-            pass
-        stdscr.refresh()
-        time.sleep(5)
+page = Page.CHAT
 
 while __name__ == "__main__":
     try:
